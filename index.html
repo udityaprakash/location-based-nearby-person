@@ -3,17 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Socket.io Example</title>
+  <title>location based testing by uditya</title>
 </head>
 <body>
   <h1 id="user_name"></h1>
   <p>
-    <h1>nearby users</h1>
-    <p id="nearby_users"></p>
+    <h2>Nearby Users</h2>
+    <ul id="nearby_users" ></ul>
   </p>
   <p>
-    <h1>all users</h1>
-    <p id="all_users"></p>
+    <h2>All Users</h2>
+    <ul id="all_users"></ul>
+  </p>
+  <p>
+    <h2 id="active_user"></h2>
   </p>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
   <script>
@@ -21,9 +24,15 @@
     var nearby_user = document.getElementById("nearby_users");
     var all_users = document.getElementById("all_users");
     var user_name = document.getElementById("user_name");
+    var activeusers = document.getElementById("active_user");
 
     let name = prompt("Enter your name : ");
-    user_name.innerHTML = name;
+    if(name == null || name == ""){
+      alert("Please enter your name");
+      window.location.reload();
+    }else{
+      user_name.innerHTML = "You are: "+name;
+    }
     // Example data to send to the server
 
     function getUserLocation() {
@@ -85,8 +94,8 @@ function delayedLoop() {
     .then((location) => {
         lat = location.latitude;
         long = location.longitude;
-        console.log('Latitude:', location.latitude);
-        console.log('Longitude:', location.longitude);
+        // console.log('Latitude:', location.latitude);
+        // console.log('Longitude:', location.longitude);
         if(islocationchanged(location.latitude, location.longitude)){
 
             data = {
@@ -103,21 +112,34 @@ function delayedLoop() {
     .catch((error) => {
         console.error('Error getting location:', error.message);
     });
-    console.log('Executing every 15 seconds');
+    console.log('Executing every 2.5 seconds');
     }
 
     // Set up the loop to run every 5 seconds
-    const intervalId = setInterval(delayedLoop, 15000);
+    const intervalId = setInterval(delayedLoop, 2500);
 
     // Emit the location data to the server
 
     socket.on('nearby_users', (da) => {
-      console.log("response recienved by server : " + da);
-      nearby_user.innerHTML = JSON.stringify(da);
+      // console.log("response lenth of nearby " + da.length);
+      if(da.length == 0){
+        nearby_user.innerHTML = "There no one accept you on this site";
+        return;
+      }
+      var list = "";
+      for(var i = 0; i < da.length; i++){
+        list += "<li>" + da[i].name + " is at a distance of "+ da[i].distance +" meters</li>";
+      }
+      nearby_user.innerHTML = list;
     });
     socket.on('all_users', (da) => {
-      console.log("response of all user by server : " + da);
-      all_users.innerHTML = JSON.stringify(da);
+      // console.log("response of all user by server : " + da);
+      activeusers.innerHTML = "Live users on this site: " + da.length;
+      var li = "";
+      for(var i = 0; i < da.length; i++){
+        li += "<li>"+JSON.stringify(da[i])+"</li>";
+      }
+      all_users.innerHTML = li;
     });
   </script>
 </body>

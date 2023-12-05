@@ -26,13 +26,14 @@ io.on('connection', (socket) => {
     let userFound = users.find(user => user.id === socket.id);
     const user = { id: socket.id, name, latitude, longitude };
     if(!userFound){
+      console.log(user.name + "opened site for first time");
       users.push(user);
     }
 
 
     // Calculate distance (you may want to use a more accurate formula)
     var nearbyUsers = getNearbyUsers(user);
-    console.log("nearby user for " + socket.id +" is "+ nearbyUsers.name);
+    // console.log("nearby user for " + socket.id +" is "+ nearbyUsers.name);
     io.to(socket.id).emit('nearby_users', nearbyUsers);
     nearbyUsers.forEach(us => {
       io.to(us.id).emit('nearby_users', getNearbyUsers(us));
@@ -52,6 +53,10 @@ io.on('connection', (socket) => {
 
     // Broadcast the updated list to all connected clients
     io.emit('all_users', users);
+    users.forEach(us => {
+      io.emit('nearby_users', getNearbyUsers(us));
+
+    });
 
     console.log('User disconnected');
   });
