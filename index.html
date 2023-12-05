@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket.io Example</title>
+</head>
+<body>
+  <h1 id="user_name"></h1>
+  <p>
+    <h1>nearby users</h1>
+    <p id="nearby_users"></p>
+  </p>
+  <p>
+    <h1>all users</h1>
+    <p id="all_users"></p>
+  </p>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+  <script>
+    const socket = io();
+    var nearby_user = document.getElementById("nearby_users");
+    var all_users = document.getElementById("all_users");
+    var user_name = document.getElementById("user_name");
+
+    let name = prompt("Enter your name : ");
+    user_name.innerHTML = name;
+    // Example data to send to the server
+
+    function getUserLocation() {
+        return new Promise((resolve, reject) => {
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          resolve({ latitude, longitude });
+        },
+        (error) => {
+          reject(error);
+        }
+        );
+    } else {
+        alert('Geolocation is not supported by this browser.');
+        reject(new Error('Geolocation is not supported by this browser.'));
+    }
+  });
+}
+
+// Example usage:
+
+function islocationchanged(lat , long){
+
+    if(data.latitude != lat || data.longitude != long){
+        return true;
+    }
+    else{
+        return false;
+    }
+
+}
+
+
+var data;
+
+getUserLocation()
+    .then((location) => {
+        lat = location.latitude;
+        long = location.longitude;
+        console.log('Latitude:', location.latitude);
+        console.log('Longitude:', location.longitude);
+        data = {
+          name: name,
+          latitude: lat,
+          longitude: long
+        };
+        console.log("sending the data first time to server");
+        socket.emit('location', data);
+    })
+    .catch((error) => {
+        console.error('Error getting location:', error.message);
+    });
+
+
+function delayedLoop() {
+    getUserLocation()
+    .then((location) => {
+        lat = location.latitude;
+        long = location.longitude;
+        console.log('Latitude:', location.latitude);
+        console.log('Longitude:', location.longitude);
+        if(islocationchanged(location.latitude, location.longitude)){
+
+            data = {
+              name: name,
+              latitude: lat,
+              longitude: long
+            };
+            socket.emit('location', data);
+            console.log('location change was detected');
+        }else{
+            console.log('location didnt changed');
+        }
+    })
+    .catch((error) => {
+        console.error('Error getting location:', error.message);
+    });
+    console.log('Executing every 15 seconds');
+    }
+
+    // Set up the loop to run every 5 seconds
+    const intervalId = setInterval(delayedLoop, 15000);
+
+    // Emit the location data to the server
+
+    socket.on('nearby_users', (da) => {
+      console.log("response recienved by server : " + da);
+      nearby_user.innerHTML = JSON.stringify(da);
+    });
+    socket.on('all_users', (da) => {
+      console.log("response of all user by server : " + da);
+      all_users.innerHTML = JSON.stringify(da);
+    });
+  </script>
+</body>
+</html>
